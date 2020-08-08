@@ -217,7 +217,7 @@ func updateRelease(){
 	if _, err := os.Stat("tmp"); !os.IsNotExist(err) {
 		// clean up tmp directory
 		os.RemoveAll("tmp")
-	} 
+	}
 	if _, err := os.Stat(".upgrade"); !os.IsNotExist(err) {
 		// swap executables and update release
 		os.RemoveAll(fmt.Sprintf("../../%s", binary))
@@ -227,7 +227,7 @@ func updateRelease(){
 	}
 }
 
-// copies file from src to dst 
+// copies file from src to dst
 func copyFile(src, dst string){
 	source, err := os.Open(src)
 	if err != nil {
@@ -298,7 +298,7 @@ func setup() {
 	}
 
 	newSet.Parse(os.Args[1:])
-	
+
 	// workaround to suppress glog errors, as per https://github.com/kubernetes/kubernetes/issues/17162#issuecomment-225596212
 	flag.CommandLine.Parse([]string{})
 
@@ -372,13 +372,14 @@ func whoisLookup(inputDomain string) []string {
 	if inputDomain != "" {
 		whoisRaw, _ := whois.Whois(inputDomain)
 		result, err := whoisparser.Parse(whoisRaw)
+		fmt.Println(result)
 		if err == nil {
 
 			// Add the domain created date
-			data = append(data, result.Domain.CreatedDate)
+		/*	data = append(data, result.Domain.CreatedDate)
 
 			// Print the domain modification date
-			data = append(data, result.Domain.UpdatedDate)
+			data = append(data, result.Domain.UpdatedDate)*/
 		}
 	}
 	return data
@@ -549,6 +550,11 @@ func outputToFile(targets []string) {
 			{"subdomain", sanitizedDomain, subdomainAttack},
 			{"replacement", sanitizedDomain, replacementAttack},
 			{"repetition", sanitizedDomain, repetitionAttack},
+			//{"tld repeat", (sanitizedDomain, tld), tldrepeatAttack},
+			//{"tld replace", (sanitizedDomain, tld),tldreplaceAttack},
+			{"prefix", sanitizedDomain, prefixAttack},
+			{"doublehit", sanitizedDomain, doublehitAttack},
+			{"similar", sanitizedDomain, similarAttack},
 			{"omission", sanitizedDomain, omissionAttack},
 			{"hyphenation", sanitizedDomain, hyphenationAttack},
 			{"bitsquatting", sanitizedDomain, bitsquattingAttack},
@@ -616,6 +622,11 @@ func runPermutations(targets []string) {
 			printReport("subdomain", subdomainAttack(sanitizedDomain), tld)
 			printReport("vowel swap", vowelswapAttack(sanitizedDomain), tld)
 			printReport("repetition", repetitionAttack(sanitizedDomain), tld)
+			printReport("tld repeat", tldrepeatAttack(sanitizedDomain, tld), tld)
+			printReport("tld replace", tldreplaceAttack(sanitizedDomain, tld),"")
+			printReport("prefix", prefixAttack(sanitizedDomain), tld)
+			printReport("doublehit", doublehitAttack(sanitizedDomain), tld)
+			printReport("similar", similarAttack(sanitizedDomain), tld)
 			printReport("hyphenation", hyphenationAttack(sanitizedDomain), tld)
 			printReport("replacement", replacementAttack(sanitizedDomain), tld)
 			printReport("bitsquatting", bitsquattingAttack(sanitizedDomain), tld)
@@ -662,6 +673,280 @@ func transpositionAttack(domain string) []string {
 			results = append(results, fmt.Sprintf("%s%c%c%s", domain[:i], domain[i+1], domain[i], domain[i+2:]))
 		}
 	}
+	return results
+}
+
+// performs a tld repeat attack
+func tldrepeatAttack(domain, tld string) []string{
+	results := []string{}
+	results = append(results, fmt.Sprintf("%s%s", domain, tld))
+	return results
+}
+
+// performs a tld Replace attack
+func tldreplaceAttack(domain, tld string) []string{
+	results := []string{}
+	// Top list generated from:
+	// https://w3techs.com/technologies/overview/top_level_domain/all
+	var topTLDs = []string{
+		"com",
+		"ru",
+		"org",
+		"net",
+		"de",
+		"jp",
+		"uk",
+		"br",
+		"it",
+		"pl",
+		"fr",
+		"in",
+		"ir",
+		"io",
+		"au",
+		"info",
+		"cn",
+		"nl",
+		"es",
+		"cz",
+		"kr",
+		"ca",
+		"ua",
+		"eu",
+		"co",
+		"gr",
+		"ro",
+		"za",
+		"ch",
+		"se",
+		"tw",
+		"biz",
+		"hu",
+		"vn",
+		"mx",
+		"be",
+		"at",
+		"tr",
+		"dk",
+		"me",
+		"ar",
+		"tv",
+		"sk",
+		"no",
+		"us",
+		"fi",
+		"cl",
+		"id",
+		"io",
+		"xyz",
+		"pt",
+		"by",
+		"il",
+		"ie",
+		"nz",
+		"kz",
+		"lt",
+		"hk",
+		"cc",
+		"my",
+		"club",
+		"sg",
+		"top",
+		"bg",
+		"рф",
+		"edu",
+		"th",
+		"su",
+		"pk",
+		"hr",
+		"rs",
+		"pro",
+		"si",
+		"lv",
+		"az",
+		"pe",
+		"download",
+		"ae",
+		"ph",
+		"ee",
+		"online",
+		"ng",
+		"pw",
+		"cat",
+		"ve",
+	}
+	for _, topTLD := range topTLDs {
+		if tld == topTLD {
+			continue
+		}
+		results = append(results, fmt.Sprintf("%s.%s", domain, topTLD))
+	}
+	return results
+}
+
+// performs a prefix attack
+func prefixAttack(domain string) []string{
+	results := []string{}
+	// Top list generated from:
+	// https://w3techs.com/technologies/overview/top_level_domain/all
+	var prefixes = []string{
+		"www",
+		"www-",
+		"mail",
+		"mail-",
+		"login",
+		"login-",
+		"auth",
+		"auth-",
+		"ftp",
+		"ftp-",
+		"smtp",
+		"smtp-",
+		"imap",
+		"imap-",
+		"account",
+		"account-",
+		"accounts",
+		"accounts-",
+		"users",
+		"users-",
+		"sso",
+		"sso-",
+	}
+	for _, prefixes := range prefixes {
+
+		results = append(results, fmt.Sprintf("%s%s", prefixes, domain))
+	}
+	return results
+}
+
+// performs a similar attack
+
+func  similarAttack(domain string) []string{
+
+	similars := map[rune][]rune{
+		'a': {'à', 'â', 'ä'},
+		'à': {'a', 'â', 'ä'},
+		'â': {'à', 'a', 'ä'},
+		'ä': {'à', 'â', 'a'},
+		'e': {'è', 'é', 'ê', 'ë'},
+		'è': {'e', 'é', 'ê', 'ë'},
+		'é': {'è', 'e', 'ê', 'ë'},
+		'ê': {'é', 'è', 'e', 'ë'},
+		'ë': {'é', 'è', 'ê', 'e'},
+		'i': {'î', 'ï'},
+		'î': {'i', 'ï'},
+		'ï': {'î', 'i'},
+		'u': {'ù', 'ü', 'û'},
+		'ù': {'u', 'ü', 'û'},
+		'ü': {'ù', 'u', 'û'},
+		'û': {'ù', 'ü', 'u'},
+		'ñ': {'n'},
+		'n': {'ñ'},
+		'o': {'ö', 'ô'},
+		'ö': {'o', 'ô'},
+		'ô': {'ö', 'o'},
+		'y': {'ÿ', 'ŷ'},
+		'ÿ': {'y', 'ŷ'},
+		'ŷ': {'ÿ', 'y'},
+		'c': {'ç'},
+		'ç': {'c'},
+	}
+
+doneCount := make(map[rune]bool)
+results := []string{}
+runes := []rune(domain)
+count := countChar(domain)
+
+for i, char := range runes {
+	// perform attack against single character
+	for _, similar := range similars[char] {
+		results = append(results, fmt.Sprintf("%s%c%s", string(runes[:i]), similar, string(runes[i+1:])))
+	}
+	// determine if character is a duplicate
+	// and if the attack has already been performed
+	// against all characters at the same time
+	if count[char] > 1 && doneCount[char] != true {
+		doneCount[char] = true
+		for _, similar := range similars[char] {
+			result := strings.Replace(domain, string(char), string(similar), -1)
+			results = append(results, result)
+		}
+	}
+}
+	return results
+}
+
+func  doublehitAttack(domain string) []string{
+
+	keys := map[rune][]rune{
+		'a': {'1', '2', 'z', 'q', 'é'},
+		'ä': {'ü', '-', 'ö'},
+		'z': {'2', '3', 'e', 'é', 's', 'a', 'q'},
+		'e': {'3', '4', 'r', 'd', 's', 'z', 'w'},
+		'r': {'4', '5', 't', 'f', 'd', 'e'},
+		't': {'5', '6', 'y', 'g', 'f', 'r', '-'},
+		'y': {'6', '7', 'u', 'h', 'g', 't', 'è', '-'},
+		'u': {'7', '8', 'i', 'j', 'h', 'y', 'è'},
+		'ü': {'ß', '+', 'ä', 'ö', 'p'},
+		'i': {'8', '9', 'o', 'k', 'j', 'u', 'ç'},
+		'o': {'9', '0', 'p', 'l', 'k', 'i', 'ç', 'à'},
+		'ö': {'p', 'ü', 'ä', 'l', '-'},
+		'p': {'0', 'à', 'l', 'o', 'ß', 'ü', 'ö'},
+		'q': {'a', 'z', 's', 'w', '1', '2'},
+		's': {'z', 'e', 'd', 'x', 'w', 'q'},
+		'd': {'e', 'r', 'f', 'c', 'x', 's'},
+		'f': {'r', 't', 'g', 'v', 'c', 'd'},
+		'g': {'t', 'z', 'h', 'b', 'v', 'f'},
+		'h': {'z', 'u', 'j', 'n', 'b', 'g'},
+		'j': {'u', 'i', 'k', 'm', 'n', 'h'},
+		'k': {'i', 'o', 'l', 'm', 'j'},
+		'l': {'o', 'p', 'm', 'k', 'ö'},
+		'm': {'p', 'ù', 'l', 'j', 'k', 'n'},
+		'w': {'q', 's', 'x', '2', '3', 'e', 'a'},
+		'x': {'s', 'd', 'c', 'w'},
+		'c': {'d', 'f', 'v', 'x'},
+		'v': {'f', 'g', 'b', 'c'},
+		'b': {'g', 'h', 'n', 'v'},
+		'n': {'h', 'j', 'b', 'm'},
+		'ñ': {'p', 'l'},
+		'1': {'2', 'a', 'é', 'q'},
+		'2': {'1', '3', 'a', 'z', 'é'},
+		'3': {'2', '4', 'e', 'w', 'é'},
+		'4': {'3', '5', 'r', 'e'},
+		'5': {'4', '6', 't', 'r'},
+		'6': {'5', '7', 'y', 't', 'è'},
+		'7': {'6', '8', 'u', 'y', 'è'},
+		'8': {'7', '9', 'i', 'u', 'è', 'ç'},
+		'9': {'8', '0', 'o', 'i', 'ç', 'à'},
+		'0': {'9', 'à', 'ç', 'p', 'o'},
+	}
+
+//doneCount := make(map[rune]bool)
+results := []string{}
+runes := []rune(domain)
+//count := countChar(domain)
+
+for i, char := range runes {
+	// perform attack against single character
+	for _, key := range keys[char] {
+		results = append(results, fmt.Sprintf("%s%c%c%s", string(runes[:i]),runes[i], key, string(runes[i+1:])))
+		results = append(results, fmt.Sprintf("%s%c%c%s", string(runes[:i]),runes[i], key, string(runes[i+1:])))
+		for i := 0; i < len(results); i++ {
+			for i2 := i + 1; i2 < len(results); i2++ {
+				if results[i] == results[i2] {
+					// delete
+					results = append(results[:i2], results[i2+1:]...)
+					i2--
+				}
+			}
+		}
+		return results
+
+	}
+
+	}
+//}
 	return results
 }
 
