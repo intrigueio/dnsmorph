@@ -684,101 +684,27 @@ func transpositionAttack(domain string) []string {
 }*/
 
 // performs a tld Replace attack
-func tldreplaceAttack(domain /*tld string*/) []string{
+func tldreplaceAttack(domain string) []string{
 	results := []string{}
-	// Top list generated from:
-	// https://w3techs.com/technologies/overview/top_level_domain/all
-	var topTLDs = []string{
-		"com",
-		"ru",
-		"org",
-		"net",
-		"de",
-		"jp",
-		"uk",
-		"br",
-		"it",
-		"pl",
-		"fr",
-		"in",
-		"ir",
-		"io",
-		"au",
-		"info",
-		"cn",
-		"nl",
-		"es",
-		"cz",
-		"kr",
-		"ca",
-		"ua",
-		"eu",
-		"co",
-		"gr",
-		"ro",
-		"za",
-		"ch",
-		"se",
-		"tw",
-		"biz",
-		"hu",
-		"vn",
-		"mx",
-		"be",
-		"at",
-		"tr",
-		"dk",
-		"me",
-		"ar",
-		"tv",
-		"sk",
-		"no",
-		"us",
-		"fi",
-		"cl",
-		"id",
-		"io",
-		"xyz",
-		"pt",
-		"by",
-		"il",
-		"ie",
-		"nz",
-		"kz",
-		"lt",
-		"hk",
-		"cc",
-		"my",
-		"club",
-		"sg",
-		"top",
-		"bg",
-		"рф",
-		"edu",
-		"th",
-		"su",
-		"pk",
-		"hr",
-		"rs",
-		"pro",
-		"si",
-		"lv",
-		"az",
-		"pe",
-		"download",
-		"ae",
-		"ph",
-		"ee",
-		"online",
-		"ng",
-		"pw",
-		"cat",
-		"ve",
+	
+	file, err := os.Open("data/dns_tld.txt")
+ 
+	if err != nil {
+		log.Fatalf("failed opening file: %s", err)
 	}
+ 
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var topTLDs []string
+ 
+	for scanner.Scan() {
+		topTLDs = append(topTLDs, scanner.Text())
+	}
+ 
+	file.Close()
+ 
 	for _, topTLD := range topTLDs {
-		/*if tld == topTLD {
-			continue
-		}*/
+		
 		results = append(results, fmt.Sprintf("%s.%s", domain, topTLD))
 	}
 	return results
