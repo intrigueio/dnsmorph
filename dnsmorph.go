@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"github.com/AnasBensalah/dnsmorph"
 	"path/filepath"
 	"archive/zip"
 	"bufio"
@@ -35,7 +36,7 @@ const version = "1.2.7"
 
 var (
 	githubTag = &latest.GithubTag{
-		Owner:             "netevert",
+		Owner:             "AnasBensalah",
 		Repository:        "dnsmorph",
 		FixVersionStrFunc: latest.DeleteFrontV()}
 	g                 = color.New(color.FgHiGreen)
@@ -686,9 +687,7 @@ func transpositionAttack(domain string) []string {
 // performs a tld Replace attack
 func tldreplaceAttack(domain string) []string{
 	results := []string{}
-	
-	file, err := os.Open("data/dns_tld.txt")
- 
+	file, err := os.Open("/home/anas/go/src/github.com/AnasBensalah/dnsmorph/data/dns_tld.txt")
 	if err != nil {
 		log.Fatalf("failed opening file: %s", err)
 	}
