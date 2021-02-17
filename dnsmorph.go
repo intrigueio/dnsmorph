@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"github.com/AnasBensalah/dnsmorph"
 	"path/filepath"
 	"archive/zip"
 	"bufio"
@@ -687,11 +686,14 @@ func transpositionAttack(domain string) []string {
 // performs a tld Replace attack
 func tldreplaceAttack(domain string) []string{
 	results := []string{}
-	file, err := os.Open("/home/anas/go/src/github.com/AnasBensalah/dnsmorph/data/dns_tld.txt")
+	home, err := os.UserHomeDir()
+	filepath := home + "/go/src/github.com/AnasBensalah/dnsmorph/data/dns_tld.txt"
+	file, err := os.Open(filepath)
 	if err != nil {
 		log.Fatalf("failed opening file: %s", err)
 	}
- 
+	
+	
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 	var topTLDs []string
