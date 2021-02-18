@@ -35,7 +35,7 @@ const version = "1.2.7"
 
 var (
 	githubTag = &latest.GithubTag{
-		Owner:             "AnasBensalah",
+		Owner:             "intrigueio",
 		Repository:        "dnsmorph",
 		FixVersionStrFunc: latest.DeleteFrontV()}
 	g                 = color.New(color.FgHiGreen)
@@ -553,6 +553,7 @@ func outputToFile(targets []string) {
 			//{"tld repeat", sanitizedDomain, tldrepeatAttack},
 			{"tld replace", sanitizedDomain, tldreplaceAttack},
 			{"prefix", sanitizedDomain, prefixAttack},
+			{"suffix", sanitizedDomain, suffixAttack},
 			{"doublehit", sanitizedDomain, doublehitAttack},
 			{"similar", sanitizedDomain, similarAttack},
 			{"omission", sanitizedDomain, omissionAttack},
@@ -625,6 +626,7 @@ func runPermutations(targets []string) {
 			//printReport("tld repeat", tldrepeatAttack(sanitizedDomain, tld), tld)
 			printReport("tld replace", tldreplaceAttack(sanitizedDomain),"")
 			printReport("prefix", prefixAttack(sanitizedDomain), tld)
+			printReport("suffix", suffixAttack(sanitizedDomain), tld)
 			printReport("doublehit", doublehitAttack(sanitizedDomain), tld)
 			printReport("similar", similarAttack(sanitizedDomain), tld)
 			printReport("hyphenation", hyphenationAttack(sanitizedDomain), tld)
@@ -687,7 +689,7 @@ func transpositionAttack(domain string) []string {
 func tldreplaceAttack(domain string) []string{
 	results := []string{}
 	home, err := os.UserHomeDir()
-	filepath := home + "/go/src/github.com/AnasBensalah/dnsmorph/data/dns_tld.txt"
+	filepath := home + "/go/src/github.com/intrigueio/dnsmorph/data/dns_tld.txt"
 	file, err := os.Open(filepath)
 	if err != nil {
 		log.Fatalf("failed opening file: %s", err)
@@ -714,35 +716,57 @@ func tldreplaceAttack(domain string) []string{
 // performs a prefix attack
 func prefixAttack(domain string) []string{
 	results := []string{}
-	// Top list generated from:
-	// https://w3techs.com/technologies/overview/top_level_domain/all
-	var prefixes = []string{
-		"www",
-		"www-",
-		"mail",
-		"mail-",
-		"login",
-		"login-",
-		"auth",
-		"auth-",
-		"ftp",
-		"ftp-",
-		"smtp",
-		"smtp-",
-		"imap",
-		"imap-",
-		"account",
-		"account-",
-		"accounts",
-		"accounts-",
-		"users",
-		"users-",
-		"sso",
-		"sso-",
+	
+	home, err := os.UserHomeDir()
+	filepath := home + "/go/src/github.com/intrigueio/dnsmorph/data/prefixes.txt"
+	file, err := os.Open(filepath)
+	if err != nil {
+		log.Fatalf("failed opening file: %s", err)
 	}
-	for _, prefixes := range prefixes {
+	
+	
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var prefixes []string
+ 
+	for scanner.Scan() {
+		prefixes = append(prefixes, scanner.Text())
+	}
+ 
+	file.Close()
+	
+	for _, prefixe := range prefixes {
 
-		results = append(results, fmt.Sprintf("%s%s", prefixes, domain))
+		results = append(results, fmt.Sprintf("%s%s", prefixe, domain))
+	}
+	return results
+}
+
+// performs a prefix attack
+func suffixAttack(domain string) []string{
+	results := []string{}
+	
+	home, err := os.UserHomeDir()
+	filepath := home + "/go/src/github.com/intrigueio/dnsmorph/data/suffixes.txt"
+	file, err := os.Open(filepath)
+	if err != nil {
+		log.Fatalf("failed opening file: %s", err)
+	}
+	
+	
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var suffixes []string
+ 
+	for scanner.Scan() {
+		suffixes = append(suffixes, scanner.Text())
+	}
+ 
+	file.Close()
+	
+	for _, suffixe := range suffixes {
+
+		results = append(results, fmt.Sprintf("%s%s", domain, suffixe))
 	}
 	return results
 }
